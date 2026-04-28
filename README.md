@@ -11,6 +11,7 @@ It does NOT support receive mode.
 - [fujitsu-264](#fujitsu-264)
 - [panasonic](#panasonic)
 - [electra](#electra)
+- [samsung](#samsung)
 - [sharp](#sharp)
 - [mitsubishi](#mitsubishi)
 
@@ -127,6 +128,14 @@ climate:
     name: 'Living Room AC'
 ```
 
+## samsung
+
+```yaml
+climate:
+  - platform: samsung
+    name: 'Living Room AC'
+```
+
 ## sharp
 
 ```yaml
@@ -147,6 +156,7 @@ climate:
 
 ## Changelog
 
+- **2026.04.29**: Add Samsung platform
 - **2026.03.28**: Add Mitsubishi platform
 - **2026.02.21**: Add Sharp platform
 - **2026.02.19**: Use latest version of IRremoteESP8266
