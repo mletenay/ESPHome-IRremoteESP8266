@@ -114,13 +114,24 @@ namespace esphome
                     }
                 }
 
-                if (this->swing_mode == climate::CLIMATE_SWING_VERTICAL)
+                switch (this->swing_mode)
                 {
-                    this->ac_.setSwing(true);
-                }
-                else
-                {
+                case climate::CLIMATE_SWING_HORIZONTAL:
+                    this->ac_.setSwingH(true);
                     this->ac_.setSwing(false);
+                    break;
+                case climate::CLIMATE_SWING_BOTH:
+                    this->ac_.setSwingH(true);
+                    this->ac_.setSwing(true);
+                    break;
+                case climate::CLIMATE_SWING_VERTICAL:
+                    this->ac_.setSwingH(false);
+                    this->ac_.setSwing(true);
+                    break;
+                default:
+                    this->ac_.setSwingH(false);
+                    this->ac_.setSwing(false);
+                    break;
                 }
 
                 this->ac_.on();
