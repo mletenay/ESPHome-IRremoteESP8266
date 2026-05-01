@@ -11,4 +11,5 @@ CONFIG_SCHEMA = climate_ir.climate_ir_with_receiver_schema(SamsungClimate)
 
 async def to_code(config):
     ir_remote_base.load_ir_remote()
+    cg.add_define("SEND_SAMSUNG_AC", True)
     await climate_ir.new_climate_ir(config)
