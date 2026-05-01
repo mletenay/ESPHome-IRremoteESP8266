@@ -20,28 +20,42 @@ namespace esphome
 
         void SamsungClimate::send()
         {
+            const uint16_t kSamsungAcHdrMark = 690;
+            const uint16_t kSamsungAcHdrSpace = 17844;
+            const uint16_t kSamsungAcSectionMark = 3086;
+            const uint16_t kSamsungAcSectionSpace = 8864;
+            const uint16_t kSamsungAcSectionGap = 2886;
+            const uint16_t kSamsungAcBitMark = 586;
+            const uint16_t kSamsungAcOneSpace = 1432;
+            const uint16_t kSamsungAcZeroSpace = 436;
+            const uint16_t kSamsungAcSectionLength = 7;
+            const uint16_t kSamsungAcStateLength = kSamsungAcSectionLength * 3;
+
             uint8_t *message = this->ac_.getRaw();
-            const uint16_t section_length = kSamsungAcSectionLength;
 
-            auto transmit = this->transmitter_->transmit();
-            auto *data = transmit.get_data();
-            data->set_carrier_frequency(38000);
+            sendGeneric(
+                kSamsungAcHdrMark, kSamsungAcHdrSpace,
+                kSamsungAcBitMark, kSamsungAcOneSpace,
+                kSamsungAcBitMark, kSamsungAcZeroSpace,
+                kSamsungAcBitMark, kSamsungAcSectionGap,
+                message, kSamsungAcSectionLength,
+                38000);
 
-            data->mark(kSamsungAcHdrMark);
-            data->space(kSamsungAcHdrSpace);
+            sendGeneric(
+                kSamsungAcSectionMark, kSamsungAcSectionSpace,
+                kSamsungAcBitMark, kSamsungAcOneSpace,
+                kSamsungAcBitMark, kSamsungAcZeroSpace,
+                kSamsungAcBitMark, kSamsungAcSectionGap,
+                message + kSamsungAcSectionLength, kSamsungAcSectionLength,
+                38000);
 
-            for (uint16_t offset = 0; offset < kSamsungAcStateLength; offset += section_length)
-            {
-                sendGeneric(
-                    kSamsungAcSectionMark, kSamsungAcSectionSpace,
-                    kSamsungAcBitMark, kSamsungAcOneSpace,
-                    kSamsungAcBitMark, kSamsungAcZeroSpace,
-                    kSamsungAcBitMark, kSamsungAcSectionGap,
-                    message + offset, section_length,
-                    38000);
-            }
-
-            transmit.perform();
+            sendGeneric(
+                kSamsungAcSectionMark, kSamsungAcSectionSpace,
+                kSamsungAcBitMark, kSamsungAcOneSpace,
+                kSamsungAcBitMark, kSamsungAcZeroSpace,
+                kSamsungAcBitMark, kSamsungAcSectionGap,
+                message + kSamsungAcSectionLength * 2, kSamsungAcSectionLength,
+                38000);
         }
 
         void SamsungClimate::apply_state()
