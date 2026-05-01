@@ -1,16 +1,21 @@
 #include "samsung.h"
 
-// Define Samsung AC timing constants locally if not available from IRremoteESP8266
 #ifndef kSamsungAcHdrMark
-const uint16_t kSamsungAcHdrMark = 690;
-const uint16_t kSamsungAcHdrSpace = 17844;
-const uint16_t kSamsungAcSectionMark = 3086;
-const uint16_t kSamsungAcSectionSpace = 8864;
-const uint16_t kSamsungAcSectionGap = 2886;
-const uint16_t kSamsungAcBitMark = 586;
-const uint16_t kSamsungAcOneSpace = 1432;
-const uint16_t kSamsungAcZeroSpace = 436;
-const uint16_t kSamsungAcSectionLength = 7;
+namespace
+{
+    inline constexpr uint16_t kSamsungAcHdrMark = 690;
+    inline constexpr uint16_t kSamsungAcHdrSpace = 17844;
+    inline constexpr uint16_t kSamsungAcSectionMark = 3086;
+    inline constexpr uint16_t kSamsungAcSectionSpace = 8864;
+    inline constexpr uint16_t kSamsungAcSectionGap = 2886;
+    inline constexpr uint16_t kSamsungAcBitMark = 586;
+    inline constexpr uint16_t kSamsungAcOneSpace = 1432;
+    inline constexpr uint16_t kSamsungAcZeroSpace = 436;
+    inline constexpr uint16_t kSamsungAcSectionLength = 7;
+    inline constexpr uint16_t kSamsungAcFrequency = 38000;
+}
+#else
+static constexpr uint16_t kSamsungAcFrequency = 38000;
 #endif
 
 namespace esphome
@@ -21,123 +26,114 @@ namespace esphome
 
         void SamsungClimate::setup()
         {
-            climate_ir::ClimateIR::setup();
-            this->apply_state();
+            IrRemoteBase::setup();
+            apply_state();
         }
 
         void SamsungClimate::transmit_state()
         {
-            this->apply_state();
-            this->send();
+            apply_state();
+            send();
         }
 
         void SamsungClimate::send()
         {
-            uint8_t *message = this->ac_.getRaw();
+            uint8_t *message = ac_.getRaw();
 
-            sendGeneric(
-                kSamsungAcHdrMark, kSamsungAcHdrSpace,
-                kSamsungAcBitMark, kSamsungAcOneSpace,
-                kSamsungAcBitMark, kSamsungAcZeroSpace,
-                kSamsungAcBitMark, kSamsungAcSectionGap,
-                message, kSamsungAcSectionLength,
-                38000);
+            auto send_section = [&](const uint8_t *section, uint16_t header_mark, uint32_t header_space)
+            {
+                sendGeneric(
+                    header_mark, header_space,
+                    kSamsungAcBitMark, kSamsungAcOneSpace,
+                    kSamsungAcBitMark, kSamsungAcZeroSpace,
+                    kSamsungAcBitMark, kSamsungAcSectionGap,
+                    section, kSamsungAcSectionLength,
+                    kSamsungAcFrequency);
+            };
 
-            sendGeneric(
-                kSamsungAcSectionMark, kSamsungAcSectionSpace,
-                kSamsungAcBitMark, kSamsungAcOneSpace,
-                kSamsungAcBitMark, kSamsungAcZeroSpace,
-                kSamsungAcBitMark, kSamsungAcSectionGap,
-                message + kSamsungAcSectionLength, kSamsungAcSectionLength,
-                38000);
-
-            sendGeneric(
-                kSamsungAcSectionMark, kSamsungAcSectionSpace,
-                kSamsungAcBitMark, kSamsungAcOneSpace,
-                kSamsungAcBitMark, kSamsungAcZeroSpace,
-                kSamsungAcBitMark, kSamsungAcSectionGap,
-                message + kSamsungAcSectionLength * 2, kSamsungAcSectionLength,
-                38000);
+            send_section(message, kSamsungAcHdrMark, kSamsungAcHdrSpace);
+            send_section(message + kSamsungAcSectionLength, kSamsungAcSectionMark, kSamsungAcSectionSpace);
+            send_section(message + 2 * kSamsungAcSectionLength, kSamsungAcSectionMark, kSamsungAcSectionSpace);
         }
 
         void SamsungClimate::apply_state()
         {
-            if (this->mode == climate::CLIMATE_MODE_OFF)
+            if (mode == climate::CLIMATE_MODE_OFF)
             {
-                this->ac_.off();
+                ac_.off();
             }
             else
             {
-                this->ac_.setTemp(static_cast<uint8_t>(this->target_temperature));
+                ac_.setTemp(static_cast<uint8_t>(target_temperature));
 
-                switch (this->mode)
+                switch (mode)
                 {
                 case climate::CLIMATE_MODE_HEAT_COOL:
-                    this->ac_.setMode(kSamsungAcAuto);
+                    ac_.setMode(kSamsungAcAuto);
                     break;
                 case climate::CLIMATE_MODE_COOL:
-                    this->ac_.setMode(kSamsungAcCool);
+                    ac_.setMode(kSamsungAcCool);
                     break;
                 case climate::CLIMATE_MODE_DRY:
-                    this->ac_.setMode(kSamsungAcDry);
+                    ac_.setMode(kSamsungAcDry);
                     break;
                 case climate::CLIMATE_MODE_FAN_ONLY:
-                    this->ac_.setMode(kSamsungAcFan);
+                    ac_.setMode(kSamsungAcFan);
                     break;
                 case climate::CLIMATE_MODE_HEAT:
-                    this->ac_.setMode(kSamsungAcHeat);
+                    ac_.setMode(kSamsungAcHeat);
                     break;
                 default:
-                    this->ac_.setMode(kSamsungAcAuto);
+                    ac_.setMode(kSamsungAcAuto);
                     break;
                 }
 
-                if (this->fan_mode.has_value())
+                if (fan_mode.has_value())
                 {
-                    switch (this->fan_mode.value())
+                    switch (fan_mode.value())
                     {
                     case climate::CLIMATE_FAN_AUTO:
-                        this->ac_.setFan(this->mode == climate::CLIMATE_MODE_HEAT_COOL ? kSamsungAcFanAuto2 : kSamsungAcFanAuto);
+                        ac_.setFan(mode == climate::CLIMATE_MODE_HEAT_COOL ? kSamsungAcFanAuto2 : kSamsungAcFanAuto);
                         break;
                     case climate::CLIMATE_FAN_LOW:
-                        this->ac_.setFan(kSamsungAcFanLow);
+                        ac_.setFan(kSamsungAcFanLow);
                         break;
                     case climate::CLIMATE_FAN_MEDIUM:
-                        this->ac_.setFan(kSamsungAcFanMed);
+                        ac_.setFan(kSamsungAcFanMed);
                         break;
                     case climate::CLIMATE_FAN_HIGH:
-                        this->ac_.setFan(kSamsungAcFanHigh);
+                        ac_.setFan(kSamsungAcFanHigh);
                         break;
                     default:
-                        this->ac_.setFan(kSamsungAcFanAuto);
+                        ac_.setFan(kSamsungAcFanAuto);
                         break;
                     }
                 }
 
-                switch (this->swing_mode)
+                bool swing_h = false;
+                bool swing_v = false;
+                switch (swing_mode)
                 {
                 case climate::CLIMATE_SWING_HORIZONTAL:
-                    this->ac_.setSwingH(true);
-                    this->ac_.setSwing(false);
+                    swing_h = true;
                     break;
                 case climate::CLIMATE_SWING_BOTH:
-                    this->ac_.setSwingH(true);
-                    this->ac_.setSwing(true);
+                    swing_h = true;
+                    swing_v = true;
                     break;
                 case climate::CLIMATE_SWING_VERTICAL:
-                    this->ac_.setSwingH(false);
-                    this->ac_.setSwing(true);
+                    swing_v = true;
                     break;
                 default:
-                    this->ac_.setSwingH(false);
-                    this->ac_.setSwing(false);
                     break;
                 }
 
-                this->ac_.on();
+                ac_.setSwingH(swing_h);
+                ac_.setSwing(swing_v);
+                ac_.on();
             }
 
-            ESP_LOGI(TAG, "%s", this->ac_.toString().c_str());
+            ESP_LOGI(TAG, "%s", ac_.toString().c_str());
         }
 
     } // namespace samsung
