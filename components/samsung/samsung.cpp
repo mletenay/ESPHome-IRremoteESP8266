@@ -1,5 +1,18 @@
 #include "samsung.h"
 
+// Define Samsung AC timing constants locally if not available from IRremoteESP8266
+#ifndef kSamsungAcHdrMark
+const uint16_t kSamsungAcHdrMark = 690;
+const uint16_t kSamsungAcHdrSpace = 17844;
+const uint16_t kSamsungAcSectionMark = 3086;
+const uint16_t kSamsungAcSectionSpace = 8864;
+const uint16_t kSamsungAcSectionGap = 2886;
+const uint16_t kSamsungAcBitMark = 586;
+const uint16_t kSamsungAcOneSpace = 1432;
+const uint16_t kSamsungAcZeroSpace = 436;
+const uint16_t kSamsungAcSectionLength = 7;
+#endif
+
 namespace esphome
 {
     namespace samsung
@@ -20,17 +33,6 @@ namespace esphome
 
         void SamsungClimate::send()
         {
-            const uint16_t kSamsungAcHdrMark = 690;
-            const uint16_t kSamsungAcHdrSpace = 17844;
-            const uint16_t kSamsungAcSectionMark = 3086;
-            const uint16_t kSamsungAcSectionSpace = 8864;
-            const uint16_t kSamsungAcSectionGap = 2886;
-            const uint16_t kSamsungAcBitMark = 586;
-            const uint16_t kSamsungAcOneSpace = 1432;
-            const uint16_t kSamsungAcZeroSpace = 436;
-            const uint16_t kSamsungAcSectionLength = 7;
-            const uint16_t kSamsungAcStateLength = kSamsungAcSectionLength * 3;
-
             uint8_t *message = this->ac_.getRaw();
 
             sendGeneric(
