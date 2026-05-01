@@ -1,23 +1,5 @@
 #include "samsung.h"
 
-#ifndef kSamsungAcHdrMark
-namespace
-{
-    inline constexpr uint16_t kSamsungAcHdrMark = 690;
-    inline constexpr uint16_t kSamsungAcHdrSpace = 17844;
-    inline constexpr uint16_t kSamsungAcSectionMark = 3086;
-    inline constexpr uint16_t kSamsungAcSectionSpace = 8864;
-    inline constexpr uint16_t kSamsungAcSectionGap = 2886;
-    inline constexpr uint16_t kSamsungAcBitMark = 586;
-    inline constexpr uint16_t kSamsungAcOneSpace = 1432;
-    inline constexpr uint16_t kSamsungAcZeroSpace = 436;
-    inline constexpr uint16_t kSamsungAcSectionLength = 7;
-    inline constexpr uint16_t kSamsungAcFrequency = 38000;
-}
-#else
-static constexpr uint16_t kSamsungAcFrequency = 38000;
-#endif
-
 namespace esphome
 {
     namespace samsung
@@ -48,7 +30,7 @@ namespace esphome
                     kSamsungAcBitMark, kSamsungAcZeroSpace,
                     kSamsungAcBitMark, kSamsungAcSectionGap,
                     section, kSamsungAcSectionLength,
-                    kSamsungAcFrequency);
+                    38000);
             };
 
             send_section(message, kSamsungAcHdrMark, kSamsungAcHdrSpace);
