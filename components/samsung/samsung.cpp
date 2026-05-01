@@ -20,14 +20,28 @@ namespace esphome
 
         void SamsungClimate::send()
         {
-            if (this->mode == climate::CLIMATE_MODE_OFF)
+            uint8_t *message = this->ac_.getRaw();
+            const uint16_t section_length = kSamsungAcSectionLength;
+
+            auto transmit = this->transmitter_->transmit();
+            auto *data = transmit.get_data();
+            data->set_carrier_frequency(38000);
+
+            data->mark(kSamsungAcHdrMark);
+            data->space(kSamsungAcHdrSpace);
+
+            for (uint16_t offset = 0; offset < kSamsungAcStateLength; offset += section_length)
             {
-                this->ac_.sendOff();
+                sendGeneric(
+                    kSamsungAcSectionMark, kSamsungAcSectionSpace,
+                    kSamsungAcBitMark, kSamsungAcOneSpace,
+                    kSamsungAcBitMark, kSamsungAcZeroSpace,
+                    kSamsungAcBitMark, kSamsungAcSectionGap,
+                    message + offset, section_length,
+                    38000);
             }
-            else
-            {
-                this->ac_.send();
-            }
+
+            transmit.perform();
         }
 
         void SamsungClimate::apply_state()
