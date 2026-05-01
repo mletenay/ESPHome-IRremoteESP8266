@@ -10,7 +10,6 @@ const uint16_t kSamsungAcSectionGap = 2886;
 const uint16_t kSamsungAcBitMark = 586;
 const uint16_t kSamsungAcOneSpace = 1432;
 const uint16_t kSamsungAcZeroSpace = 436;
-const uint16_t kSamsungAcSectionLength = 7;
 #endif
 namespace esphome
 {
